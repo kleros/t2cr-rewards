@@ -1,0 +1,32 @@
+{
+  "name": "t2cr-rewards",
+  "version": "1.0.0",
+  "description": "Bot to withdraw fees and rewards from contributions to fees\"",
+  "main": "index.js",
+  "author": "Kleros",
+  "license": "MIT",
+  "scripts": {
+    "prettify": "kathari prettify",
+    "lint": "kathari lint:js --no-root",
+    "test": "echo \"\"",
+    "cz": "kathari cz",
+    "start": "env-cmd ./.env.staging node ./src/index.js",
+    "start:production": "env-cmd ./.env.production node ./src/index.js"
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
+  "devDependencies": {
+    "nodemon": "^1.19.1",
+    "@kleros/kathari": "^0.20.0",
+    "standard-version": "^4.4.0"
+  },
+  "dependencies": {
+    "env-cmd": "^9.0.3",
+    "ethers": "^4.0.29",
+    "function-batch": "^1.1.2",
+    "level": "^5.0.1"
+  }
+}
