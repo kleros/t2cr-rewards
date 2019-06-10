@@ -20,7 +20,7 @@ const run = async bot => {
     } catch (err) {
       console.error('Bot error: ', err)
     }
-    await delay(10000) // Wait 10 seconds before restarting failed bot.
+    await delay(50000) // Wait 50 seconds before restarting failed bot.
   }
 }
 bots.forEach(run)
