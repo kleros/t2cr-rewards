@@ -1,4 +1,5 @@
 const fetch = require('node-fetch')
+const delay = require('delay')
 const _arbitrableAddressList = require('../../contracts/arbitrable-address-list.json')
 
 const BADGES_CACHE = 'BADGES_CACHE'
@@ -105,4 +106,5 @@ module.exports = async (web3, batchedSend, db) => {
 
   // Save cache
   await db.put(BADGES_CACHE, JSON.stringify(cache))
+  await delay(60 * 60 * 1000) // Run the bot every 60 minutes.
 }

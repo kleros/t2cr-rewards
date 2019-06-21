@@ -1,4 +1,5 @@
 const fetch = require('node-fetch')
+const delay = require('delay')
 const _t2cr = require('../../contracts/t2cr.json')
 
 const T2CR_CACHE = 'T2CR_CACHE'
@@ -94,4 +95,5 @@ module.exports = async (web3, batchedSend, db) => {
 
   // Save cache
   await db.put(T2CR_CACHE, JSON.stringify(cache))
+  await delay(60 * 60 * 1000) // Run the bot every 60 minutes.
 }

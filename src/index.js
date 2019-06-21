@@ -20,7 +20,7 @@ const run = async bot => {
     web3,
     process.env.TRANSACTION_BATCHER_CONTRACT_ADDRESS,
     process.env.BATCH_SEND_PRIVATE_KEY,
-    20000 // Batch time window of 20 seconds.
+    20 * 1000 // Batch time window of 20 seconds.
   )
 
   while (true) {
@@ -29,7 +29,7 @@ const run = async bot => {
     } catch (err) {
       console.error('Bot error: ', err)
     }
-    await delay(50000) // Wait 50 seconds before restarting failed bot.
+    await delay(50 * 1000) // Wait 50 seconds before restarting failed bot.
   }
 }
 
