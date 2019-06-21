@@ -36,7 +36,7 @@ module.exports = async (web3, batchedSend, db) => {
     const query = `https://${process.env.ETHERSCAN_NETWORK_SUBDOMAIN}.etherscan.io/api?module=account&action=txlist&address=${badgeTCRAddr}&startblock=${cache[badgeTCRAddr]}&endblock=99999999&sort=asc&apikey=${process.env.ETHERSCAN_API_KEY}`
 
     const FUND_APPEAL_ID = web3.eth.abi.encodeFunctionSignature(
-      _arbitrableAddressList.abi[25]
+      _arbitrableAddressList.abi[25] // fundAppeal(address, uint8)
     )
     const fundAppealTxs = (await (await fetch(query)).json()).result.filter(
       receipt => receipt.input.slice(0, 10) === FUND_APPEAL_ID
@@ -44,7 +44,7 @@ module.exports = async (web3, batchedSend, db) => {
 
     cache[badgeTCRAddr] = fundAppealTxs[fundAppealTxs.length - 1].blockNumber
 
-    // Extract contributor addresses to each item.
+    // Extract contributor address to each item.
     const itemsContributions = fundAppealTxs.reduce((acc, curr) => {
       const encodedFunctionParams = `0x${curr.input.slice(10)}` // Removes function ID
       const inputParams = web3.eth.abi.decodeParameters(
@@ -58,7 +58,7 @@ module.exports = async (web3, batchedSend, db) => {
       return acc
     }, {})
 
-    // Search for pending withdrawals and save them.
+    // Search for pending withdrawals and queue them.
     const badgeTCR = new web3.eth.Contract(
       _arbitrableAddressList.abi,
       badgeTCRAddr
@@ -84,6 +84,7 @@ module.exports = async (web3, batchedSend, db) => {
                 if (!pendingWithdrawals[address][contributor])
                   pendingWithdrawals[address][contributor] = []
 
+                // Add pending withdrawl to queue.
                 pendingWithdrawals.push({
                   args: [contributor, address, request, 0, 0],
                   method: badgeTCR.methods.batchRoundWithdraw,
@@ -97,7 +98,7 @@ module.exports = async (web3, batchedSend, db) => {
     )    
   }
 
-  // Withdraw funds.
+  // Batch withdraw funds.
   if (pendingWithdrawals.length > 0) {
     console.info('Pending withdraws: ', pendingWithdrawals.length)
     console.info('Total ETH value', web3.utils.fromWei(totalPending))

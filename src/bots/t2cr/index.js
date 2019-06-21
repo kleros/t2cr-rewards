@@ -29,14 +29,14 @@ module.exports = async (web3, batchedSend, db) => {
   // filter out those which are not contributions to appeal fees crowdfunding.
   const query = `https://${process.env.ETHERSCAN_NETWORK_SUBDOMAIN}.etherscan.io/api?module=account&action=txlist&address=${t2crData.address}&startblock=${cache.lastQueriedBlock}&endblock=99999999&sort=asc&apikey=${process.env.ETHERSCAN_API_KEY}`
 
-  const FUND_APPEAL_ID = web3.eth.abi.encodeFunctionSignature(_t2cr.abi[26])
+  const FUND_APPEAL_ID = web3.eth.abi.encodeFunctionSignature(_t2cr.abi[26]) // fundAppeal(bytes32, uint8)
   const fundAppealTxs = (await (await fetch(query)).json()).result.filter(
-    receipt => receipt.input.slice(0, 10) === FUND_APPEAL_ID
+    receipt => receipt.input.slice(0, 10) === FUND_APPEAL_ID 
   ) // Remove non contribution txs.
 
   cache.lastQueriedBlock = fundAppealTxs[fundAppealTxs.length - 1].blockNumber
 
-  // Extract contributor addresses to each item.
+  // Extract contributor address to each item.
   const itemsContributions = fundAppealTxs.reduce((acc, curr) => {
     const encodedFunctionParams = `0x${curr.input.slice(10)}` // Removes function ID
     const inputParams = web3.eth.abi.decodeParameters(
@@ -50,7 +50,7 @@ module.exports = async (web3, batchedSend, db) => {
     return acc
   }, {})
 
-  // Search for pending withdrawals and save them.
+  // Search for pending withdrawals and queue them.
   const t2cr = new web3.eth.Contract(_t2cr.abi, t2crData.address)
   const pendingWithdrawals = []
   let totalPending = web3.utils.toBN(0)
@@ -74,6 +74,7 @@ module.exports = async (web3, batchedSend, db) => {
               if (!pendingWithdrawals[tokenID][contributor])
                 pendingWithdrawals[tokenID][contributor] = []
 
+              // Add pending withdrawl to queue.
               pendingWithdrawals.push({
                 args: [contributor, tokenID, request, 0, 0],
                 method: t2cr.methods.batchRoundWithdraw,
