@@ -104,7 +104,7 @@ module.exports = async (web3, batchedSend, db) => {
     console.info('Pending withdraws: ', pendingWithdrawals.length)
     console.info('Total ETH value', web3.utils.fromWei(totalPending))
     console.info()
-    // batchedSend(pendingWithdrawals)
+    batchedSend(pendingWithdrawals)
   }  
 
   // Save cache
