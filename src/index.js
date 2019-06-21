@@ -11,7 +11,7 @@ if (missingEnvVariables()) {
 }
 const bots = [require('./bots/t2cr'), require('./bots/badge-tcr')]
 
-const db = level('./storage/DB_T2CR')
+const db = level(`./storage/DB_T2CR_${process.env.ETHERSCAN_NETWORK_SUBDOMAIN}`)
 // Run bots and restart them on failures.
 const run = async bot => {
   // Create an instance of `web3` and `batched-send` for each bot.

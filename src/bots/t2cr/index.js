@@ -34,7 +34,7 @@ module.exports = async (web3, batchedSend, db) => {
     receipt => receipt.input.slice(0, 10) === FUND_APPEAL_ID 
   ) // Remove non contribution txs.
 
-  cache.lastQueriedBlock = fundAppealTxs[fundAppealTxs.length - 1].blockNumber
+  cache.lastQueriedBlock = fundAppealTxs.length > 0 ? fundAppealTxs[fundAppealTxs.length - 1].blockNumber : cache.lastQueriedBlock
 
   // Extract contributor address to each item.
   const itemsContributions = fundAppealTxs.reduce((acc, curr) => {
@@ -89,9 +89,11 @@ module.exports = async (web3, batchedSend, db) => {
 
   // Withdraw funds.
   if (pendingWithdrawals.length > 0) {
+    console.info('T2CR ======')
     console.info('Pending withdraws: ', pendingWithdrawals.length)
     console.info('Total ETH value', web3.utils.fromWei(totalPending))
-    batchedSend(pendingWithdrawals)
+    console.info()
+    // batchedSend(pendingWithdrawals)
   }
 
   // Save cache
