@@ -1,6 +1,7 @@
 const Web3 = require('web3')
 const delay = require('delay')
 const _batchedSend = require('./utils/batched-send')
+const missingEnvVariables = require('./utils/env-check')
 const bots = [require('./bots/t2cr')]
 
 // Run bots and restart them on failures.
@@ -23,4 +24,12 @@ const run = async bot => {
     await delay(50000) // Wait 50 seconds before restarting failed bot.
   }
 }
+
+if (missingEnvVariables()) {
+  console.error(
+    'Missing environment variables. Check .env.staging or .env.production.'
+  )
+  return
+}
+
 bots.forEach(run)

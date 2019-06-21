@@ -20,7 +20,7 @@
     ]
   },
   "devDependencies": {
-    "@kleros/kathari": "^0.20.0",
+    "@kleros/kathari": "^0.23.0",
     "rimraf": "^2.6.3",
     "standard-version": "^4.4.0"
   },
