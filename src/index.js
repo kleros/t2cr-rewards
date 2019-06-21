@@ -1,9 +1,17 @@
 const Web3 = require('web3')
 const delay = require('delay')
 const _batchedSend = require('./utils/batched-send')
+const level = require('level')
 const missingEnvVariables = require('./utils/env-check')
-const bots = [require('./bots/t2cr')]
+if (missingEnvVariables()) {
+  console.error(
+    'Missing environment variables. Check .env.staging or .env.production.'
+  )
+  return
+}
+const bots = [require('./bots/t2cr'), require('./bots/badge-tcr')]
 
+const db = level('./storage/DB_T2CR')
 // Run bots and restart them on failures.
 const run = async bot => {
   // Create an instance of `web3` and `batched-send` for each bot.
@@ -17,19 +25,12 @@ const run = async bot => {
 
   while (true) {
     try {
-      await bot(web3, batchedSend)
+      await bot(web3, batchedSend, db)
     } catch (err) {
       console.error('Bot error: ', err)
     }
     await delay(50000) // Wait 50 seconds before restarting failed bot.
   }
-}
-
-if (missingEnvVariables()) {
-  console.error(
-    'Missing environment variables. Check .env.staging or .env.production.'
-  )
-  return
 }
 
 bots.forEach(run)

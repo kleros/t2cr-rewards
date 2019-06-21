@@ -1,12 +1,10 @@
 const fetch = require('node-fetch')
-const level = require('level')
 const _t2cr = require('../../contracts/t2cr.json')
 
 const T2CR_CACHE = 'T2CR_CACHE'
 
 const t2crData = JSON.parse(process.env.T2CR_DATA)
 const initialState = {
-  fundAppealTxs: [],
   lastQueriedBlock: t2crData.blockNumber + 1
 }
 
@@ -14,9 +12,8 @@ const initialState = {
 // uses the addresses to check if there are pending withdraws. If there are,
 // withdraws for the user.
 // Additionally, use cache to only analyze from the latest block onwards.
-module.exports = async (web3, batchedSend) => {
+module.exports = async (web3, batchedSend, db) => {
   // Load or create cache
-  const db = level('./storage/DB_T2CR')
   let cache
   try {
     cache = JSON.parse(await db.get(T2CR_CACHE))
@@ -29,7 +26,6 @@ module.exports = async (web3, batchedSend) => {
   // To find pending withdrawals, the address of contributors must be known.
   // We learn this by scraping all addresses that sent transactions to the TCR and then
   // filter out those which are not contributions to appeal fees crowdfunding.
-  const t2crData = JSON.parse(process.env.T2CR_DATA)
   const query = `https://${process.env.ETHERSCAN_NETWORK_SUBDOMAIN}.etherscan.io/api?module=account&action=txlist&address=${t2crData.address}&startblock=${cache.lastQueriedBlock}&endblock=99999999&sort=asc&apikey=${process.env.ETHERSCAN_API_KEY}`
 
   const FUND_APPEAL_ID = web3.eth.abi.encodeFunctionSignature(_t2cr.abi[26])
@@ -56,7 +52,7 @@ module.exports = async (web3, batchedSend) => {
   // Search for pending withdrawals and save them.
   const t2cr = new web3.eth.Contract(_t2cr.abi, t2crData.address)
   const pendingWithdrawals = []
-  const totalPending = web3.utils.toBN(0)
+  let totalPending = web3.utils.toBN(0)
   await Promise.all(
     Object.keys(itemsContributions).map(async tokenID => {
       await Promise.all(
@@ -72,7 +68,7 @@ module.exports = async (web3, batchedSend) => {
                 .call()
             )
             if (amountWithdrawable.gt(web3.utils.toBN(0))) {
-              totalPending.add(amountWithdrawable)
+              totalPending = totalPending.add(amountWithdrawable)
               if (!pendingWithdrawals[tokenID]) pendingWithdrawals[tokenID] = {}
               if (!pendingWithdrawals[tokenID][contributor])
                 pendingWithdrawals[tokenID][contributor] = []
@@ -90,11 +86,12 @@ module.exports = async (web3, batchedSend) => {
   )
 
   // Withdraw funds.
-  console.info('Pending withdraws: ', pendingWithdrawals.length)
-  console.info('Total ETH value', web3.utils.fromWei(totalPending))
-  batchedSend(pendingWithdrawals)
+  if (pendingWithdrawals.length > 0) {
+    console.info('Pending withdraws: ', pendingWithdrawals.length)
+    console.info('Total ETH value', web3.utils.fromWei(totalPending))
+    batchedSend(pendingWithdrawals)
+  }
 
   // Save cache
   await db.put(T2CR_CACHE, JSON.stringify(cache))
-  await db.close()
 }
