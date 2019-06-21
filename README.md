@@ -12,3 +12,10 @@
 On the [Token² Curated List](tokens.kleros.io), users can contribute to dispute appeal fees to the side they believe is correct and get a chance to win rewards.
 
 This bot is a convenience tool that withdraws those fee contributions and rewards to users so they don't have to do it themselves.
+
+## Usage
+
+The bot needs to query every round of the requests a user contributed to. As the TCRs grow, this could result in too many requests being sent to the node and result in rate limiting.
+To avoid this we use local storage to not query blocks already checked.
+
+To clear the cache, use `yarn clear`.
