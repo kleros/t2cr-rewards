@@ -58,7 +58,6 @@ module.exports = async (web3, batchedSend, db) => {
   console.info('Queue pending T2CR withdrawals.')
   await Promise.all(
     Object.keys(itemsContributions).map(async tokenID => {
-      console.info('Iterating T2CR contributions...')
       await Promise.all(
         [...itemsContributions[tokenID]].map(async contributor => {
           const numberOfRequests = (await t2cr.methods
