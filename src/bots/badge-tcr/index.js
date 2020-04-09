@@ -38,6 +38,7 @@ module.exports = async (web3, batchedSend, db) => {
     const FUND_APPEAL_ID = web3.eth.abi.encodeFunctionSignature(
       _arbitrableAddressList.abi[25] // fundAppeal(address, uint8)
     )
+    console.info(`Fetching fund appeal TXes from etherscan for badge ${badgeTCRAddr}`)
     const fundAppealTxs = (await (await fetch(query)).json()).result.filter(
       receipt => receipt.input.slice(0, 10) === FUND_APPEAL_ID
     ) // Remove non contribution txs.
@@ -63,6 +64,7 @@ module.exports = async (web3, batchedSend, db) => {
       _arbitrableAddressList.abi,
       badgeTCRAddr
     )    
+    console.info('Queue badge contributions...')
     await Promise.all(
       Object.keys(itemsContributions).map(async address => {
         await Promise.all(
@@ -85,6 +87,7 @@ module.exports = async (web3, batchedSend, db) => {
                   pendingWithdrawals[address][contributor] = []
 
                 // Add pending withdrawl to queue.
+                console.info(`Queing badge ${badgeTCRAddr} withdrawals.`)
                 pendingWithdrawals.push({
                   args: [contributor, address, request, 0, 0],
                   method: badgeTCR.methods.batchRoundWithdraw,
@@ -99,11 +102,12 @@ module.exports = async (web3, batchedSend, db) => {
   }
 
   // Batch withdraw funds.
-  if (pendingWithdrawals.length > 0) {
-    console.info('Badge TCRs ======')
-    console.info('Pending withdraws: ', pendingWithdrawals.length)
-    console.info('Total ETH value', web3.utils.fromWei(totalPending))
-    console.info()
+  console.info('Badge TCRs ======')
+  console.info('Pending withdraws: ', pendingWithdrawals.length)
+  console.info('Total ETH value', web3.utils.fromWei(totalPending))
+  console.info()
+  if (pendingWithdrawals.length > 0) {    
+    console.info('Pushing withdrawl Badge TXes to batcher')
     batchedSend(pendingWithdrawals)
   }  
 

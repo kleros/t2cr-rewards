@@ -29,6 +29,7 @@ module.exports = async (web3, batchedSend, db) => {
   // filter out those which are not contributions to appeal fees crowdfunding.
   const query = `https://${process.env.ETHERSCAN_NETWORK_SUBDOMAIN}.etherscan.io/api?module=account&action=txlist&address=${t2crData.address}&startblock=${cache.lastQueriedBlock}&endblock=99999999&sort=asc&apikey=${process.env.ETHERSCAN_API_KEY}`
 
+  console.info('Find fund appeal txes to the T2CR.')
   const FUND_APPEAL_ID = web3.eth.abi.encodeFunctionSignature(_t2cr.abi[26]) // fundAppeal(bytes32, uint8)
   const fundAppealTxs = (await (await fetch(query)).json()).result.filter(
     receipt => receipt.input.slice(0, 10) === FUND_APPEAL_ID 
@@ -54,8 +55,10 @@ module.exports = async (web3, batchedSend, db) => {
   const t2cr = new web3.eth.Contract(_t2cr.abi, t2crData.address)
   const pendingWithdrawals = []
   let totalPending = web3.utils.toBN(0)
+  console.info('Queue pending T2CR withdrawals.')
   await Promise.all(
     Object.keys(itemsContributions).map(async tokenID => {
+      console.info('Iterating T2CR contributions...')
       await Promise.all(
         [...itemsContributions[tokenID]].map(async contributor => {
           const numberOfRequests = (await t2cr.methods
@@ -75,6 +78,7 @@ module.exports = async (web3, batchedSend, db) => {
                 pendingWithdrawals[tokenID][contributor] = []
 
               // Add pending withdrawl to queue.
+              console.info('Queing T2CR withdrawals.')
               pendingWithdrawals.push({
                 args: [contributor, tokenID, request, 0, 0],
                 method: t2cr.methods.batchRoundWithdraw,
@@ -88,11 +92,12 @@ module.exports = async (web3, batchedSend, db) => {
   )
 
   // Withdraw funds.
-  if (pendingWithdrawals.length > 0) {
-    console.info('T2CR ======')
-    console.info('Pending withdraws: ', pendingWithdrawals.length)
-    console.info('Total ETH value', web3.utils.fromWei(totalPending))
-    console.info()
+  console.info('T2CR ======')
+  console.info('Pending withdraws: ', pendingWithdrawals.length)
+  console.info('Total ETH value', web3.utils.fromWei(totalPending))
+  console.info()
+  if (pendingWithdrawals.length > 0) {    
+    console.info('Pushing withdrawl T2CR TXes to batcher')
     batchedSend(pendingWithdrawals)
   }
 
