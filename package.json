@@ -29,7 +29,7 @@
     "env-cmd": "^9.0.3",
     "function-batch": "^1.1.2",
     "level": "^5.0.1",
-    "node-fetch": "^2.6.1",
+    "node-fetch": "^3.1.1",
     "web3": "^1.0.0-beta.55"
   }
 }
